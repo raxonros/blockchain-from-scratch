@@ -226,33 +226,7 @@ fn build_contentious_forked_chain() -> (Vec<Header>, Vec<Header>, Vec<Header>) {
     }
 
     (common_prefix, even_suffix, odd_suffix)
-    
-    // let mut prefix = Vec::new();
-    // let mut g = Header::genesis();
-    // prefix.push(g.clone());
-    // for _ in 0..FORK_HEIGHT {
-    //     let b = g.child(1);
-    //     prefix.push(b.clone());
-    //     g = b;
-    // }
 
-    // let mut even = Vec::new();
-    // let mut odd = Vec::new();
-    // let mut g = prefix.last().unwrap().clone();
-    // for i in 0..4 {
-    //     let b = g.child(2);
-    //     even.push(b.clone());
-    //     g = b;
-    // }
-
-    // let mut g = prefix.last().unwrap().clone();
-    // for i in 0..4 {
-    //     let b = g.child(3);
-    //     odd.push(b.clone());
-    //     g = b;
-    // }
-
-    // (prefix, even, odd)
 
 }
 
