@@ -40,7 +40,82 @@ impl StateMachine for ClothesMachine {
     type Transition = ClothesAction;
 
     fn next_state(starting_state: &ClothesState, t: &ClothesAction) -> ClothesState {
-        todo!("Exercise 3")
+    
+       match starting_state {
+            
+            ClothesState::Clean(live) => {
+                if live - 1 == 0 {
+                     return ClothesState::Tattered
+                }
+                match t {
+                   ClothesAction::Wear => {
+                        ClothesState::Dirty(live-1)      
+                   } 
+                   ClothesAction::Wash => {
+                        
+                        ClothesState::Wet(live-1)
+                        
+                   }
+                   ClothesAction::Dry => {
+                        
+                        ClothesState::Clean(live-1)           
+                   }
+                  
+                }
+            }
+            ClothesState::Wet(live) => {
+                if live - 1 == 0 {
+                    return ClothesState::Tattered
+                }
+                match t {
+                    ClothesAction::Wear => {
+                         
+                        ClothesState::Dirty(live-1)
+                         
+                         
+                    } 
+                    ClothesAction::Wash => {
+                         
+                        ClothesState::Wet(live-1)
+                         
+                    }
+                    ClothesAction::Dry => {
+                         
+                        ClothesState::Clean(live-1)
+                         
+                    }
+                   
+                 }
+            }
+            
+            ClothesState::Dirty(live) => {
+                if live - 1 == 0 {
+                    return ClothesState::Tattered
+                }
+                match t {
+                    ClothesAction::Wear => {
+                        
+                        ClothesState::Dirty(live-1)
+                         
+                         
+                    } 
+                    ClothesAction::Wash => {
+                        
+                        ClothesState::Wet(live-1)
+                         
+                    }
+                    ClothesAction::Dry => {
+                         
+                        ClothesState::Dirty(live-1)
+                         
+                    }
+                   
+                 }
+            }
+
+            _ => ClothesState::Tattered
+
+       }
     }
 }
 
