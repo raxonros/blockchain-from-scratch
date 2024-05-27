@@ -67,27 +67,7 @@ impl Header {
         }
     
         true
-        
-        // if chain.len() == 0{
-        //     if self.height == 0  && self.parent == 0{
-        //         return true;
-        //     }
-
-        // }
-        // if chain.len() == 1 {
-        //     return chain[0].parent == hash(self) && chain[0].height == self.height + 1;
-        // }
-
-        // for i in 1..chain.len() {
-        //     if chain[i].parent != hash(&chain[i-1]) {
-        //         return false;
-        //     }
-        //     if chain[i].height != chain[i-1].height + 1 {
-        //         return false;
-        //     }
-        // }
-        
-        
+            
     }
 }
 
