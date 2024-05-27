@@ -37,12 +37,31 @@ pub struct Header {
 impl Header {
     /// Returns a new valid genesis header.
     fn genesis() -> Self {
-        todo!("Exercise 1")
+        Header {
+            parent: 0,
+            height: 0,
+            extrinsic: 0,
+            state: 0,
+            consensus_digest: 0,
+        }
     }
 
     /// Create and return a valid child header.
     fn child(&self, extrinsic: u64) -> Self {
-        todo!("Exercise 2")
+        let mut nonce = 0;
+        let mut child = Header {
+            parent: hash(self),
+            height: self.height + 1,
+            extrinsic,
+            // state: self.state + extrinsic,
+            state: self.state + extrinsic, 
+            consensus_digest: 0,
+        };
+        while hash(&child) > THRESHOLD {
+            child.consensus_digest += 1;
+        }
+    
+        child
     }
 
     /// Verify that all the given headers form a valid chain from this header to the tip.
@@ -50,7 +69,30 @@ impl Header {
     /// In addition to all the rules we had before, we now need to check that the block hash
     /// is below a specific threshold.
     fn verify_sub_chain(&self, chain: &[Header]) -> bool {
-        todo!("Exercise 3")
+        if chain.is_empty() {
+            return self.height == 0 && self.parent == 0 && self.state == 0;
+        }
+
+        if self.height + 1 != chain[0].height
+            || hash(self) != chain[0].parent
+            || self.state + chain[0].extrinsic != chain[0].state
+            || hash(&chain[0]) > THRESHOLD
+        {
+            return false;
+        }
+
+       
+        for i in 0..chain.len() - 1 {
+            if chain[i].height + 1 != chain[i + 1].height
+                || hash(&chain[i]) != chain[i + 1].parent
+                || chain[i].state + chain[i + 1].extrinsic != chain[i + 1].state
+                || hash(&chain[i]) > THRESHOLD
+            {
+                return false;
+            }
+        }
+
+        true
     }
 
     // After the blockchain ran for a while, a political rift formed in the community.
@@ -62,13 +104,78 @@ impl Header {
     /// verify that the given headers form a valid chain.
     /// In this case "valid" means that the STATE MUST BE EVEN.
     fn verify_sub_chain_even(&self, chain: &[Header]) -> bool {
-        todo!("Exercise 4")
+       
+        if chain.is_empty() {
+            return self.height == 0 && self.parent == 0 && self.state == 0;
+        }
+
+        if self.height + 1 != chain[0].height
+            || hash(self) != chain[0].parent
+            || self.state + chain[0].extrinsic != chain[0].state
+            || self.state % 2 != 0
+            || hash(&chain[0]) > THRESHOLD
+        {
+            return false;
+        }
+
+        for i in 0..chain.len() - 1 {
+            if chain[i].height + 1 != chain[i + 1].height
+                || hash(&chain[i]) != chain[i + 1].parent
+                || chain[i].state + chain[i + 1].extrinsic != chain[i + 1].state
+            {
+                return false;
+            }
+    
+            if chain[i + 1].height > FORK_HEIGHT && chain[i + 1].state % 2 != 0 {
+                return false;
+            }
+    
+            if hash(&chain[i]) > THRESHOLD {
+                return false;
+            }
+        }
+    
+        true
+
+       
     }
 
     /// verify that the given headers form a valid chain.
     /// In this case "valid" means that the STATE MUST BE ODD.
     fn verify_sub_chain_odd(&self, chain: &[Header]) -> bool {
-        todo!("Exercise 5")
+        
+        if chain.is_empty() {
+            return self.height == 0 && self.parent == 0 && self.state == 0;
+        }
+
+        if self.height + 1 != chain[0].height
+            || hash(self) != chain[0].parent
+            || self.state + chain[0].extrinsic != chain[0].state
+            || self.state % 2 != 0
+            || hash(&chain[0]) > THRESHOLD
+        {
+            return false;
+        }
+
+
+        for i in 0..chain.len() - 1 {
+            if chain[i].height + 1 != chain[i + 1].height
+                || hash(&chain[i]) != chain[i + 1].parent
+                || chain[i].state + chain[i + 1].extrinsic != chain[i + 1].state
+            {
+                return false;
+            }
+    
+            if chain[i + 1].height > FORK_HEIGHT && chain[i + 1].state % 2 == 0 {
+                return false;
+            }
+    
+            if hash(&chain[i]) > THRESHOLD {
+                return false;
+            }
+        }
+    
+        true
     }
 }
 
@@ -89,7 +196,64 @@ impl Header {
 /// G -- 1 -- 2
 ///            \-- 3'-- 4'
 fn build_contentious_forked_chain() -> (Vec<Header>, Vec<Header>, Vec<Header>) {
-    todo!("Exercise 6")
+    
+    let genesis = Header::genesis();
+
+    let mut common_prefix = vec![genesis.clone()];
+    let mut even_suffix = vec![];
+    let mut odd_suffix = vec![];
+
+    let mut current_header = genesis;
+    while current_header.height < FORK_HEIGHT {
+        current_header = current_header.child(1);
+        common_prefix.push(current_header.clone());
+    }
+
+    while current_header.height < FORK_HEIGHT + 2 {
+        current_header = current_header.child(2);
+        even_suffix.push(current_header.clone());
+    }
+
+    current_header = common_prefix.last().unwrap().clone();
+    while current_header.height < FORK_HEIGHT + 2 {
+        if current_header.state % 2 == 0 {
+            current_header = current_header.child(1);
+        } else {
+            current_header = current_header.child(2);
+        }
+       
+        odd_suffix.push(current_header.clone());
+    }
+
+    (common_prefix, even_suffix, odd_suffix)
+    
+    // let mut prefix = Vec::new();
+    // let mut g = Header::genesis();
+    // prefix.push(g.clone());
+    // for _ in 0..FORK_HEIGHT {
+    //     let b = g.child(1);
+    //     prefix.push(b.clone());
+    //     g = b;
+    // }
+
+    // let mut even = Vec::new();
+    // let mut odd = Vec::new();
+    // let mut g = prefix.last().unwrap().clone();
+    // for i in 0..4 {
+    //     let b = g.child(2);
+    //     even.push(b.clone());
+    //     g = b;
+    // }
+
+    // let mut g = prefix.last().unwrap().clone();
+    // for i in 0..4 {
+    //     let b = g.child(3);
+    //     odd.push(b.clone());
+    //     g = b;
+    // }
+
+    // (prefix, even, odd)
+
 }
 
 // To run these tests: `cargo test bc_3`
