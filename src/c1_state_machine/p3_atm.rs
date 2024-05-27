@@ -71,6 +71,88 @@ impl StateMachine for Atm {
                 next_state
                 
             }
+
+            Action::PressKey(key) => {
+                match key {
+                    Key::One | Key::Two | Key::Three | Key::Four => {
+                        
+                        if starting_state.expected_pin_hash == Auth::Waiting {
+                            return starting_state.clone();
+                        }
+                        let mut keystroke_register = starting_state.keystroke_register.clone();
+                        keystroke_register.push(key.clone());
+                        let next_state = Atm{
+                            cash_inside: starting_state.cash_inside,
+                            expected_pin_hash:  starting_state.expected_pin_hash.clone(),
+                            keystroke_register: keystroke_register,
+                        };
+                        next_state
+                    }
+
+                    Key::Enter => {
+
+                        match starting_state.expected_pin_hash {
+                            Auth::Waiting => {
+                                return starting_state.clone();
+                            }
+                            Auth::Authenticated => {
+                                let mut cash_inside = starting_state.cash_inside;
+                                let mut number_string = String::new();
+                                for key in &starting_state.keystroke_register {
+                                    match key {
+                                        Key::One => {
+                                            number_string.push_str("1");
+                                        }
+                                        Key::Two => {
+                                            number_string.push_str("2");
+                                        }
+                                        Key::Three => {
+                                            number_string.push_str("3");
+                                        }
+                                        Key::Four => {
+                                            number_string.push_str("4");
+                                        }
+                                        _ => {}
+                                    }
+                                }
+
+                                let number_to_subtract= number_string.parse().unwrap_or(0);
+                                if number_to_subtract > cash_inside {
+                                    cash_inside = starting_state.cash_inside;
+                                } else {
+                                    cash_inside -= number_to_subtract;
+                                }
+                                
+                                let next_state = Atm{
+                                    cash_inside: cash_inside,
+                                    expected_pin_hash:  Auth::Waiting,
+                                    keystroke_register: Vec::new(),
+                                };
+                                next_state
+                            }
+                            Auth::Authenticating(received_pin) => {
+                                let hash_pin = crate::hash(&starting_state.keystroke_register);
+                                if hash_pin != received_pin {
+                                    let next_state = Atm{
+                                        cash_inside: starting_state.cash_inside,
+                                        expected_pin_hash:  Auth::Waiting,
+                                        keystroke_register: Vec::new(),
+                                    };
+                                    return next_state;
+                                }
+                                let next_state = Atm{
+                                    cash_inside: starting_state.cash_inside,
+                                    expected_pin_hash:  Auth::Authenticated,
+                                    keystroke_register: Vec::new(),
+                                };
+                                next_state
+                            }
+                        }
+                        
+                    }
+                    
+                }
+            }
             
 
             _ => starting_state.clone()
